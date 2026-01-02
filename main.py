@@ -43,6 +43,8 @@ def videoFeed(img, Xc, Yc, present):
     resize_fil = cv2.resize(gray_fil, (64, 64))
     text1 = 'O'
     text2 = '_'
+    canvas = np.zeros((64*6, 64*6, 3), dtype="uint8")
+    canvas.fill(255)
     if Yc[4]-Yc[8] > 0.1:
         let_click = True
     if present:
@@ -59,11 +61,12 @@ def videoFeed(img, Xc, Yc, present):
     for y in range(64):
         for x in range(64):
             pixel = resize_fil[y, x]
-            if pixel > 127:
-                cv2.putText(flip, text1, (x*6, y*6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color=colour, thickness=2)
+            if pixel > 128:
+                cv2.putText(canvas, text1, (x*6, y*6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color=colour, thickness=2)
             else:
-                cv2.putText(flip, text2, (x*6, y*6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color=colour, thickness=2)
+                cv2.putText(canvas, text2, (x*6, y*6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color=colour, thickness=2)
     cv2.imshow('Live Video Feed', flip)
+    cv2.imshow('Drawing Canvas', canvas)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cap.release()
