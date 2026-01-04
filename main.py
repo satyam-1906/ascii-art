@@ -16,7 +16,7 @@ z_coord1 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 x_coord2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 y_coord2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 z_coord2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-flag = True
+c1 = 0
 colour = (0, 0, 0)
 c = 0
 let_click1 = True
@@ -97,27 +97,25 @@ def print_result(result, output_image, timestamp_ms):
     videoFeed(output_image, x_coord1, y_coord1, present)
 
 def videoFeed(img, Xc1, Yc1, present):
-    global flag, colour, let_click1, distance1, z_coord1, hand1, hand2, let_click2, c, distance2
+    global c1, colour, let_click1, distance1, z_coord1, hand1, hand2, let_click2, c, distance2
     resolutions = [640, 480, 320, 160]
     n_frame = img.numpy_view()
     new_frame = np.copy(n_frame)
     new_frame = cv2.cvtColor(new_frame, cv2.COLOR_RGB2BGR)
     gray_fil = cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
     sizes = [0.3, 0.5, 0.7, 1]
-    thicknesses = [2, 3, 4, 5]
+    thicknesses = [2, 2, 4, 5]
+    colour = [(0, 0, 0), (0, 0, 0), (255, 0, 0)]
     if distance1 > 0.1:
         let_click1 = True
     if present and hand1 == 1:
         distance1 = ((Xc1[4]-Xc1[8])**2 + (Yc1[4]-Yc1[8])**2 + (z_coord1[4]-z_coord1[8])**2)**0.5
-        if distance1 <= 0.05 and flag == True:
+        if distance1 <= 0.05:
             if let_click1:
-                colour = (0, 0, 0)
-                flag = False
-                let_click1 = False
-        elif distance1 <= 0.05 and flag == False:
-            if let_click1:
-                colour = (255, 0, 0)
-                flag = True
+                if c1 < 2:
+                    c1 += 1
+                else:
+                    c1 = 0
                 let_click1 = False
     if distance2 > 0.1:
         let_click2 = True
@@ -131,6 +129,7 @@ def videoFeed(img, Xc1, Yc1, present):
                     c = 0
                 let_click2 = False
     resize_fil = cv2.resize(gray_fil, (resolutions[c]//10, resolutions[c]//10))
+    new_frame_resize = cv2.resize(new_frame, (resolutions[c]//10, resolutions[c]//10))
     text = ['$','@','B','%','8','&','W','M','#','*','o','a','h','k','b','d','p','q','w','m','Z','O','Q','L','C','J','U','Y','X','z','c','v','u','n','x','r','j','f','t', '/ ','| ','(',') ','1 ','{ ','} ','[ ','] ','?','- ','_ ','+','=','~ ','< ', '> ','i ','! ','l ','I ',': ',';','. ']
     canvas = np.zeros((640, 640, 3), dtype="uint8")
     canvas.fill(255)
@@ -138,7 +137,9 @@ def videoFeed(img, Xc1, Yc1, present):
         for x in range(resolutions[c]//10):
             pixel = resize_fil[y, x]
             index = int((pixel / 255) * (len(text) - 1))
-            cv2.putText(canvas, text[index], (x*(6400//resolutions[c]), y*(6400//resolutions[c])), cv2.FONT_HERSHEY_SIMPLEX, sizes[c], colour, thicknesses[c])
+            if c1 == 1:
+                colour[1] = (int(new_frame_resize[y, x][0]), int(new_frame_resize[y, x][1]), int(new_frame_resize[y, x][2]))
+            cv2.putText(canvas, text[index], (x*(6400//resolutions[c]), y*(6400//resolutions[c])), cv2.FONT_HERSHEY_SIMPLEX, sizes[c], colour[c1], thicknesses[c])
     if present and hand1 == 1:
         cv2.circle(new_frame, (int(Xc1[4]*new_frame.shape[1]), int(Yc1[4]*new_frame.shape[0])), 5, (255, 255, 255), -1)
         cv2.circle(new_frame, (int(Xc1[8]*new_frame.shape[1]), int(Yc1[8]*new_frame.shape[0])), 5, (255, 255, 255), -1)
